@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EnquiryReceived;
 use App\Models\Enquiry;
 use App\Models\PageContent;
+use App\Support\StaffAlert;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -34,7 +36,8 @@ class HomeController extends Controller
             'message' => ['required', 'string', 'max:5000'],
         ]);
 
-        Enquiry::create($data);
+        $enquiry = Enquiry::create($data);
+        StaffAlert::send(StaffAlert::ENQUIRIES, new EnquiryReceived($enquiry));
 
         return redirect()->to($back)->with('enquiry_sent', true);
     }

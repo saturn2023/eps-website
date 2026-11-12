@@ -3,14 +3,21 @@
 namespace App\Filament\Pages;
 
 use App\Models\PageContent;
+use App\Support\StaffAlert;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Text;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class EditSiteSettings extends ContentPage
 {
@@ -114,6 +121,17 @@ class EditSiteSettings extends ContentPage
                                 ->maxLength(150),
                         ]),
 
+                    Tab::make('Email alerts')
+                        ->schema([
+                            Text::make(fn () => static::mailIsConfigured()
+                                ? 'Emails are sent through ' . config('mail.mailers.smtp.host') . ' from ' . config('mail.from.address') . '. Use "Send test email" at the top to check it works.'
+                                : 'Email sending is not set up on this server yet (MAIL_ settings in the .env file), so no alerts will be sent. Forms are still saved in the admin.'),
+                            static::alertRecipients(StaffAlert::ENQUIRIES, 'Send new enquiries to')
+                                ->helperText('Messages from the "Send us a message" forms. Press Enter after each address. Leave empty for no emails. Replying to an alert replies to the family.'),
+                            static::alertRecipients(StaffAlert::DOCUMENTS, 'Send new document uploads to')
+                                ->helperText('Enrolment and IEC document uploads. For privacy the files are not attached: staff open them in the admin.'),
+                        ]),
+
                     Tab::make('Footer')
                         ->schema([
                             Grid::make(2)->schema([
@@ -150,6 +168,58 @@ class EditSiteSettings extends ContentPage
                             ]),
                         ]),
                 ]),
+        ];
+    }
+
+    protected static function alertRecipients(string $name, string $label): TagsInput
+    {
+        return TagsInput::make($name)
+            ->label($label)
+            ->placeholder('office@example.com')
+            ->nestedRecursiveRules(['email'])
+            ->splitKeys(['Tab', ',', ' ']);
+    }
+
+    protected static function mailIsConfigured(): bool
+    {
+        return ! in_array(config('mail.default'), ['log', 'array'], true);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('testEmail')
+                ->label('Send test email')
+                ->icon(Heroicon::OutlinedEnvelope)
+                ->color('gray')
+                ->schema([
+                    TextInput::make('to')
+                        ->label('Send a test email to')
+                        ->email()
+                        ->required()
+                        ->default(fn () => auth()->user()?->email),
+                ])
+                ->modalSubmitActionLabel('Send')
+                ->action(function (array $data): void {
+                    if (! static::mailIsConfigured()) {
+                        Notification::make()->warning()->title('Email is not set up yet')
+                            ->body('Add the MAIL_ settings to the .env file on the server first.')->persistent()->send();
+
+                        return;
+                    }
+                    try {
+                        Mail::raw(
+                            'This is a test email from the ' . config('app.name') . " website.\n\nIf you can read this, email alerts are working.",
+                            fn ($message) => $message->to($data['to'])->subject('Test email from the ' . config('app.name') . ' website'),
+                        );
+                        Notification::make()->success()->title('Test email sent')
+                            ->body("Sent to {$data['to']}. Check the inbox (and the junk folder).")->send();
+                    } catch (Throwable $e) {
+                        Notification::make()->danger()->title('The email could not be sent')
+                            ->body($e->getMessage())->persistent()->send();
+                    }
+                }),
+            ...parent::getHeaderActions(),
         ];
     }
 }

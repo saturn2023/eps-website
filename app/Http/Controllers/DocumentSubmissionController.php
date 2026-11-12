@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DocumentsReceived;
 use App\Models\DocumentSubmission;
+use App\Support\StaffAlert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -41,7 +43,8 @@ class DocumentSubmissionController extends Controller
             ];
         }
 
-        DocumentSubmission::create([...collect($data)->except(['documents', 'consent'])->all(), 'files' => $files]);
+        $submission = DocumentSubmission::create([...collect($data)->except(['documents', 'consent'])->all(), 'files' => $files]);
+        StaffAlert::send(StaffAlert::DOCUMENTS, new DocumentsReceived($submission));
 
         return redirect()->to(url()->previous() . '#' . $data['form'] . '-upload')
             ->with('upload_sent', $data['form']);

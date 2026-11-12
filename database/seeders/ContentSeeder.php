@@ -114,6 +114,10 @@ class ContentSeeder extends Seeder
             'card_text' => 'The office is open on school days. We are happy to answer your questions.',
             'translate_languages' => \App\Support\Translate::DEFAULT_LANGUAGES,
             'translate_note' => 'Translated automatically by Google. Some words may not be exact.',
+            // Empty on purpose: set in Site settings > Email alerts once email works,
+            // so a dev or test site never emails the real office.
+            'alert_enquiries' => [],
+            'alert_documents' => [],
         ];
     }
 
