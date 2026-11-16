@@ -30,7 +30,7 @@
 <li class="value" style="border-top:8px solid {{ $colour }}">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
 <span aria-hidden="true" style="font-weight:700;font-size:64px;line-height:1;color:{{ $colour }}">{{ $card['letters'] ?? '' }}</span>
-@if ($img)<img src="{{ $img }}" alt="{{ $card['image_alt'] ?? '' }}" style="width:110px;height:auto">@endif
+@if ($img)<img src="{{ $img }}" alt="{{ ($card['image_alt'] ?? null) ?: \App\Models\Media::altFor($card['image'] ?? null) }}" style="width:110px;height:auto">@endif
 </div>
 <h3 style="margin:0;font-weight:600;font-size:26px;letter-spacing:.02em;color:#032855">{!! $highlight(mb_strtoupper($card['title'] ?? ''), $card['letters'] ?? '', $colour) !!}</h3>
 @if (! empty($card['text']))<p style="margin:0;font-size:18px;font-weight:400">{{ $card['text'] }}</p>@endif

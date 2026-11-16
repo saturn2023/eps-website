@@ -17,5 +17,8 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([ContentSeeder::class, AboutPagesSeeder::class, SitePagesSeeder::class]);
+
+        // List every seeded image and file in the Media Library.
+        \App\Models\Media::sync();
     }
 }

@@ -84,7 +84,7 @@ class EditHomePage extends ContentPage
                     ->required()
                     ->rules(['dimensions:min_width=1800']),
 
-                FileUpload::make('hero.video')
+                static::withMediaLibrary(FileUpload::make('hero.video'), 'video')
                     ->label('Hero video')
                     ->helperText('MP4 (H.264), 1920 × 1080, 10–30 seconds, under 20 MB. It plays muted on a loop, so it '
                         . 'should not need sound. Visitors get a pause button. Leave text out of the video, because the '
@@ -98,7 +98,7 @@ class EditHomePage extends ContentPage
                     ->visible(fn (Get $get): bool => $get('hero.media_type') === 'video')
                     ->required(fn (Get $get): bool => $get('hero.media_type') === 'video'),
 
-                FileUpload::make('hero.video_mobile')
+                static::withMediaLibrary(FileUpload::make('hero.video_mobile'), 'video')
                     ->label('Hero video for phones (optional)')
                     ->helperText('Portrait or square MP4, about 720 × 1280, under 10 MB. Phones play this smaller file instead. '
                         . 'Leave empty to use the main video everywhere.')

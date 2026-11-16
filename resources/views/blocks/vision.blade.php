@@ -10,7 +10,7 @@
 <div class="lead-big" style="margin:0;font-size:28px;line-height:1.45;font-weight:400;color:#032855">{!! str($data['statement'] ?? '')->sanitizeHtml() !!}</div>
 </div>
 @if ($image)
-<img src="{{ $image }}" alt="{{ $data['image_alt'] ?? '' }}" style="width:100%;max-width:560px;height:auto;justify-self:center">
+<img src="{{ $image }}" alt="{{ ($data['image_alt'] ?? null) ?: \App\Models\Media::altFor($data['image'] ?? null) }}" style="width:100%;max-width:560px;height:auto;justify-self:center">
 @endif
 </div>
 </section>

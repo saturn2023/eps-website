@@ -2,9 +2,17 @@
 
 namespace App\Filament\Concerns;
 
+use App\Models\Media;
+use Filament\Actions\Action;
+use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ViewField;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /** Shared field builders so every editing screen behaves the same way. */
 trait ContentFields
@@ -12,7 +20,7 @@ trait ContentFields
     /** Image upload to the public disk, with the guidance text shown under it. */
     protected static function image(string $name, string $label, string $guidance, string $folder): FileUpload
     {
-        return FileUpload::make($name)
+        return static::withMediaLibrary(FileUpload::make($name), 'image')
             ->label($label)
             ->helperText($guidance)
             ->image()
@@ -31,7 +39,7 @@ trait ContentFields
     /** Document upload (PDF, Word, Excel) to the public disk. */
     protected static function document(string $name, string $label, string $folder): FileUpload
     {
-        return FileUpload::make($name)
+        return static::withMediaLibrary(FileUpload::make($name), 'document')
             ->label($label)
             ->helperText('PDF preferred. Word and Excel files also work. Up to 20 MB.')
             ->disk('public')
@@ -48,6 +56,46 @@ trait ContentFields
             ->maxSize(20480)
             ->openable()
             ->downloadable();
+    }
+
+    /**
+     * Connect an upload field to the Media Library: new uploads are added to
+     * the library, and a "Choose from library" button picks an existing file.
+     */
+    protected static function withMediaLibrary(FileUpload $field, string $kind): FileUpload
+    {
+        return $field
+            ->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file): ?string {
+                $path = $component->saveUploadedFile($file);
+                if ($path) {
+                    Media::register($path, $file->getClientOriginalName(), auth()->id());
+                }
+
+                return $path;
+            })
+            ->hintAction(
+                Action::make('chooseFromLibrary')
+                    ->label('Choose from library')
+                    ->icon(Heroicon::OutlinedPhoto)
+                    ->modalHeading('Choose from the Media Library')
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->modalSubmitActionLabel('Use this file')
+                    ->schema([
+                        ViewField::make('media_id')
+                            ->hiddenLabel()
+                            ->view('filament.media.picker')
+                            ->viewData(['kind' => $kind])
+                            ->required()
+                            ->validationMessages(['required' => 'Click a file to choose it.']),
+                    ])
+                    ->action(function (array $data, FileUpload $component): void {
+                        $media = Media::find($data['media_id']);
+                        if ($media) {
+                            $component->state([(string) Str::uuid() => $media->path]);
+                            $component->callAfterStateUpdated();
+                        }
+                    }),
+            );
     }
 
     /** Rich text (WYSIWYG) editor with a short toolbar so the design can't be broken. */

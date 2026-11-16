@@ -21,7 +21,7 @@
 @if ($hasSide)
 <div>
 @if ($photo)
-<img class="principal-photo-img" src="{{ $photo }}" alt="{{ $data['photo_alt'] ?? '' }}">
+<img class="principal-photo-img" src="{{ $photo }}" alt="{{ ($data['photo_alt'] ?? null) ?: \App\Models\Media::altFor($data['photo'] ?? null) }}">
 @if (! empty($data['photo_caption']))<p class="photo-caption">{{ $data['photo_caption'] }}</p>@endif
 @else
 <div class="principal-photo" role="img" aria-label="{{ $data['photo_placeholder'] }}">{{ $data['photo_placeholder'] }}</div>

@@ -28,7 +28,7 @@
 <source src="{{ $heroVideo }}" type="video/mp4">
 </video>
 @elseif ($heroImage)
-<img class="hero-media" src="{{ $heroImage }}" alt="" style="object-position:{{ $heroPosition }}">
+<img class="hero-media" src="{{ $heroImage }}" alt="{{ \App\Models\Media::altFor($hero['image'] ?? null) }}" style="object-position:{{ $heroPosition }}">
 @endif
 <div class="hero-scrim" style="position:absolute;inset:0"></div>
 <div class="wrap" style="position:relative;width:100%;padding-bottom:64px">
@@ -80,7 +80,7 @@
 <img src="{{ $welcomeArt }}" alt="" style="position:absolute;left:0;bottom:0;width:min(100%,520px);height:auto;display:block">
 @endif
 @if ($welcomePhoto)
-<img src="{{ $welcomePhoto }}" alt="{{ $welcome['photo_alt'] ?? '' }}" style="position:absolute;left:30%;top:24px;width:min(70%,440px);aspect-ratio:3 / 2;object-fit:cover;border-radius:24px;border:6px solid #ffffff;box-shadow:0 18px 40px rgba(3,40,85,.22)">
+<img src="{{ $welcomePhoto }}" alt="{{ ($welcome['photo_alt'] ?? null) ?: \App\Models\Media::altFor($welcome['photo'] ?? null) }}" style="position:absolute;left:30%;top:24px;width:min(70%,440px);aspect-ratio:3 / 2;object-fit:cover;border-radius:24px;border:6px solid #ffffff;box-shadow:0 18px 40px rgba(3,40,85,.22)">
 @endif
 </div>
 <div class="welcome-copy" style="padding:24px 40px 96px 56px;max-width:720px">
